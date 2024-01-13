@@ -34,22 +34,19 @@ func (g *Graph) Forward(inputValues []float64) (err error) {
 		queue.PushBack(node)
 		isNodePresent[node.Label] = true
 	}
-	for {
-		front := queue.Front()
-		if front != nil {
-			switch x := (front.Value).(type) {
-			case *Node:
-				x.ComputeVal()
-				if x.Output != nil && !isNodePresent[x.Output.Label] {
-					queue.PushBack(x.Output)
-				}
-			default:
-				panic(errors.New("queue must contain node pointer"))
+
+	for front := queue.Front(); front != nil; front = queue.Front() {
+		switch x := (front.Value).(type) {
+		case *Node:
+			x.ComputeVal()
+			if x.Output != nil && !isNodePresent[x.Output.Label] {
+				queue.PushBack(x.Output)
 			}
-			queue.Remove(front)
-		} else {
-			break
+		default:
+			err = errors.New("queue must contain node pointer")
+			return
 		}
+		queue.Remove(front)
 	}
 	return
 }
