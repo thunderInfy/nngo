@@ -1,5 +1,10 @@
 package nngo
 
+import (
+	"math"
+	"math/rand"
+)
+
 func Panic(err error) {
 	if err == nil {
 		return
@@ -29,4 +34,25 @@ func ToPtrs[T any](arr []T) (ret [](*T)) {
 		ret[i] = &arr[i]
 	}
 	return
+}
+
+func RandomFloat64(randSource *rand.Rand, low float64, high float64) float64 {
+	return randSource.Float64()*(high-low) + low
+}
+
+// can use relative tolerance, but for now absolute tolerance is sufficient
+func SimpleFloatEqual(a, b, epsilon float64) bool {
+	return math.Abs(a-b) <= epsilon
+}
+
+func IsStrictlyDecreasing[T float64 | int](arr []T) bool {
+	if len(arr) == 0 {
+		return false // one can argue for both true or false, but let's go with false
+	}
+	for i := 1; i < len(arr); i++ {
+		if arr[i] >= arr[i-1] {
+			return false
+		}
+	}
+	return true
 }

@@ -1,6 +1,9 @@
 package nngo
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 type Op string
 
@@ -100,8 +103,23 @@ func (g *Graph) SetInputs(vals []float64) (err error) {
 }
 
 type Module struct {
-	Graph
+	Graph  Graph
 	Params [](*Node)
+}
+
+func (m *Module) Forward(inputValues []float64, optimizer *Optimizer) (err error) {
+	inputValues = append(inputValues, optimizer.GetWeights()...)
+	err = m.Graph.Forward(inputValues)
+	return
+}
+
+func (m *Module) Backprop(upstreamGrad float64, optimizer *Optimizer) {
+	m.Graph.Backprop(upstreamGrad)
+	grads := make([]float64, len(m.Params))
+	for i := range grads {
+		grads[i] = m.Params[i].Grad
+	}
+	optimizer.UpdateWeights(grads)
 }
 
 func NewLinear(n int, label string) Module {
@@ -136,5 +154,36 @@ func NewLinear(n int, label string) Module {
 	return Module{
 		Graph:  NewGraph(inputs, &output, ToPtrs(intermediates)),
 		Params: inputs[n:],
+	}
+}
+
+type Optimizer struct {
+	NumParams    int
+	LearningRate float64
+	RandomSource *rand.Rand
+	params       []float64
+}
+
+func NewOptimizer(numParams int, learningRate float64, randSource *rand.Rand) Optimizer {
+	return Optimizer{
+		NumParams:    numParams,
+		LearningRate: learningRate,
+		RandomSource: randSource,
+	}
+}
+
+func (o *Optimizer) GetWeights() []float64 {
+	if len(o.params) == 0 {
+		// initialize
+		for i := 0; i < o.NumParams; i++ {
+			o.params = append(o.params, RandomFloat64(o.RandomSource, -1, 1))
+		}
+	}
+	return o.params
+}
+
+func (o *Optimizer) UpdateWeights(grads []float64) {
+	for i := 0; i < o.NumParams; i++ {
+		o.params[i] -= o.LearningRate * grads[i]
 	}
 }

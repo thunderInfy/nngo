@@ -1,6 +1,8 @@
 package nngo
 
 import (
+	"math"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,8 +41,8 @@ func TestBackProp1(t *testing.T) {
 // f(p,q,r,x,y,z,b) = px + qy + rz + b
 func TestBackProp2(t *testing.T) {
 
-	l := NewLinear(3, "l")
-	graph := l.Graph
+	linear := NewLinear(3, "l")
+	graph := linear.Graph
 
 	err := graph.Forward([]float64{4, -6, 7, -1, 5, 2, 1})
 	Panic(err)
@@ -71,4 +73,28 @@ func TestBackProp2(t *testing.T) {
 	assert.True(t, graph.Intermediates[2].Grad == 1)
 	assert.True(t, graph.Intermediates[3].Grad == 1)
 	assert.True(t, graph.Output.Grad == 1)
+}
+
+// given points (0, 2) and (3, 0), find the equation of line
+func TestBackProp3(t *testing.T) {
+	linear := NewLinear(2, "l")
+	optimizer := NewOptimizer(len(linear.Params), 1e-2, rand.New(rand.NewSource(42)))
+	losses := []float64{}
+	for i := 0; i < 100; i++ {
+		err := linear.Forward([]float64{0, 2}, &optimizer)
+		Panic(err)
+		loss1 := math.Pow(linear.Graph.Output.Val, 2)
+		linear.Backprop(2*linear.Graph.Output.Val, &optimizer)
+
+		err = linear.Forward([]float64{3, 0}, &optimizer)
+		Panic(err)
+		loss2 := math.Pow(linear.Graph.Output.Val, 2)
+		linear.Backprop(2*linear.Graph.Output.Val, &optimizer)
+
+		losses = append(losses, loss1+loss2)
+	}
+	p := optimizer.params
+	assert.True(t, IsStrictlyDecreasing(losses))
+	assert.True(t, SimpleFloatEqual(p[0]/p[2], -1./3., 1e-3))
+	assert.True(t, SimpleFloatEqual(p[1]/p[2], -1./2., 1e-3))
 }
