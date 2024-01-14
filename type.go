@@ -29,7 +29,9 @@ func (n *Node) IsInputSymbol() bool {
 func (n *Node) ComputeVal() {
 	switch n.Op {
 	case Add:
-		n.Val = n.Inputs[0].Val + n.Inputs[1].Val
+		n.Val = Sum(Map(n.Inputs, func(n *Node) float64 {
+			return n.Val
+		}))
 	case Multiply:
 		n.Val = n.Inputs[0].Val * n.Inputs[1].Val
 	case "":
@@ -48,8 +50,8 @@ func newNode(label string, op Op, inputs [](*Node), output *Node) Node {
 	}
 }
 
-func AddNode(label string, output *Node, input1 *Node, input2 *Node) Node {
-	return newNode(label, Add, [](*Node){input1, input2}, output)
+func AddNode(label string, output *Node, inputs [](*Node)) Node {
+	return newNode(label, Add, inputs, output)
 }
 
 func MultiplyNode(label string, output *Node, input1 *Node, input2 *Node) Node {

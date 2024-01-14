@@ -15,7 +15,7 @@ func TestBackProp1(t *testing.T) {
 	y := InputSymbol("y", &a)
 	z := InputSymbol("z", &b)
 	f := OutputSymbol("f", &b)
-	a = AddNode("a", &b, &x, &y)
+	a = AddNode("a", &b, [](*Node){&x, &y})
 	b = MultiplyNode("b", &f, &a, &z)
 
 	basicGraph, err := NewGraph([](*Node){&x, &y, &z}, &f, [](*Node){&a, &b})

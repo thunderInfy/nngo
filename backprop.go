@@ -10,8 +10,9 @@ func (n *Node) Backprop(upstreamGrad float64) {
 	n.Grad = upstreamGrad
 	switch n.Op {
 	case Add:
-		n.Inputs[0].Backprop(upstreamGrad)
-		n.Inputs[1].Backprop(upstreamGrad)
+		for _, inp := range n.Inputs {
+			inp.Backprop(upstreamGrad)
+		}
 	case Multiply:
 		n.Inputs[0].Backprop(upstreamGrad * n.Inputs[1].Val)
 		n.Inputs[1].Backprop(upstreamGrad * n.Inputs[0].Val)
