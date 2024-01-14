@@ -36,7 +36,7 @@ func TestBackProp1(t *testing.T) {
 	assert.True(t, b.Grad == 1)
 }
 
-// f(a,b,c,x,y,z) = ax + by + cz = p + q + r
+// f(a,b,c,x,y,z) = ax + by + cz
 func TestBackProp2(t *testing.T) {
 
 	l := NewLinear(3, "l")
