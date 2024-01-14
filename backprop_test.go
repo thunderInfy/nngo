@@ -36,13 +36,13 @@ func TestBackProp1(t *testing.T) {
 	assert.True(t, b.Grad == 1)
 }
 
-// f(a,b,c,x,y,z) = ax + by + cz
+// f(p,q,r,x,y,z,b) = px + qy + rz + b
 func TestBackProp2(t *testing.T) {
 
 	l := NewLinear(3, "l")
 	graph := l.Graph
 
-	err := graph.Forward([]float64{4, -6, 7, -1, 5, 2})
+	err := graph.Forward([]float64{4, -6, 7, -1, 5, 2, 1})
 	Panic(err)
 
 	assert.True(t, graph.Inputs[0].Val == 4)
@@ -51,11 +51,12 @@ func TestBackProp2(t *testing.T) {
 	assert.True(t, graph.Inputs[3].Val == -1)
 	assert.True(t, graph.Inputs[4].Val == 5)
 	assert.True(t, graph.Inputs[5].Val == 2)
+	assert.True(t, graph.Inputs[6].Val == 1)
 	assert.True(t, graph.Intermediates[0].Val == -4)
 	assert.True(t, graph.Intermediates[1].Val == -30)
 	assert.True(t, graph.Intermediates[2].Val == 14)
-	assert.True(t, graph.Intermediates[3].Val == -20)
-	assert.True(t, graph.Output.Val == -20)
+	assert.True(t, graph.Intermediates[3].Val == -19)
+	assert.True(t, graph.Output.Val == -19)
 
 	graph.Backprop(1)
 	assert.True(t, graph.Inputs[0].Grad == -1)
@@ -64,6 +65,7 @@ func TestBackProp2(t *testing.T) {
 	assert.True(t, graph.Inputs[3].Grad == 4)
 	assert.True(t, graph.Inputs[4].Grad == -6)
 	assert.True(t, graph.Inputs[5].Grad == 7)
+	assert.True(t, graph.Inputs[6].Grad == 1)
 	assert.True(t, graph.Intermediates[0].Grad == 1)
 	assert.True(t, graph.Intermediates[1].Grad == 1)
 	assert.True(t, graph.Intermediates[2].Grad == 1)

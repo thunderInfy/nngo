@@ -107,7 +107,7 @@ type Linear struct {
 func NewLinear(n int, label string) Linear {
 
 	intermediates := make([](Node), n+1)
-	inputs := make([](*Node), 2*n)
+	inputs := make([](*Node), 2*n+1)
 
 	for i := 0; i < n; i++ {
 		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), &intermediates[i])
@@ -115,9 +115,13 @@ func NewLinear(n int, label string) Linear {
 		temp := InputSymbol(fmt.Sprintf("%s-param-%d", label, i), &intermediates[i])
 		inputs[i+n] = &temp
 	}
+	bias := InputSymbol(fmt.Sprintf("%s-param-%d", label, n), &intermediates[n])
+	inputs[2*n] = &bias
 
 	output := OutputSymbol(fmt.Sprintf("%s-output", label), &intermediates[n])
-	intermediates[n] = AddNode(fmt.Sprintf("%s-add", label), &output, ToPtrs(intermediates[:n]))
+	ptrs := ToPtrs(intermediates[:n])
+	ptrs = append(ptrs, &bias)
+	intermediates[n] = AddNode(fmt.Sprintf("%s-add", label), &output, ptrs)
 
 	for i := 0; i < n; i++ {
 		node := MultiplyNode(
