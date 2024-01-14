@@ -28,18 +28,18 @@ func (g *Graph) Forward(inputValues []float64) (err error) {
 	if err != nil {
 		return
 	}
-	isNodePresent := make(map[string]bool)
+	isNodePresent := make(map[*Node]bool)
 	queue := list.New()
 	for _, node := range g.Inputs {
 		queue.PushBack(node)
-		isNodePresent[node.Label] = true
+		isNodePresent[node] = true
 	}
 
 	for front := queue.Front(); front != nil; front = queue.Front() {
 		switch x := (front.Value).(type) {
 		case *Node:
 			x.ComputeVal()
-			if x.Output != nil && !isNodePresent[x.Output.Label] {
+			if x.Output != nil && !isNodePresent[x.Output] {
 				queue.PushBack(x.Output)
 			}
 		default:

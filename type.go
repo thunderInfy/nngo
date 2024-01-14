@@ -76,6 +76,15 @@ type Graph struct {
 	Intermediates [](*Node)
 }
 
+func NewGraph(inputs [](*Node), output *Node, intermediates [](*Node)) (graph Graph, err error) {
+	graph = Graph{
+		Inputs:        inputs,
+		Output:        output,
+		Intermediates: intermediates,
+	}
+	return
+}
+
 func (g *Graph) SetInputs(vals []float64) (err error) {
 
 	if len(vals) != len(g.Inputs) {
