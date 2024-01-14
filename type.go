@@ -78,13 +78,12 @@ type Graph struct {
 	Intermediates [](*Node)
 }
 
-func NewGraph(inputs [](*Node), output *Node, intermediates [](*Node)) (graph Graph, err error) {
-	graph = Graph{
+func NewGraph(inputs [](*Node), output *Node, intermediates [](*Node)) Graph {
+	return Graph{
 		Inputs:        inputs,
 		Output:        output,
 		Intermediates: intermediates,
 	}
-	return
 }
 
 func (g *Graph) SetInputs(vals []float64) (err error) {
@@ -98,4 +97,40 @@ func (g *Graph) SetInputs(vals []float64) (err error) {
 		g.Inputs[i].Val = val
 	}
 	return
+}
+
+type Linear struct {
+	Graph
+	Params [](*Node)
+}
+
+func NewLinear(n int, label string) Linear {
+
+	intermediates := make([](Node), n+1)
+	inputs := make([](*Node), 2*n)
+
+	for i := 0; i < n; i++ {
+		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), &intermediates[i])
+		inputs[i] = &node
+		temp := InputSymbol(fmt.Sprintf("%s-param-%d", label, i), &intermediates[i])
+		inputs[i+n] = &temp
+	}
+
+	output := OutputSymbol(fmt.Sprintf("%s-output", label), &intermediates[n])
+	intermediates[n] = AddNode(fmt.Sprintf("%s-add", label), &output, ToPtrs(intermediates[:n]))
+
+	for i := 0; i < n; i++ {
+		node := MultiplyNode(
+			fmt.Sprintf("%s-prod-%d", label, i),
+			&intermediates[n],
+			inputs[i],
+			inputs[i+n],
+		)
+		intermediates[i] = node
+	}
+
+	return Linear{
+		Graph:  NewGraph(inputs, &output, ToPtrs(intermediates)),
+		Params: inputs[n:],
+	}
 }

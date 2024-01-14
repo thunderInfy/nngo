@@ -22,3 +22,11 @@ func Sum[T int | float32 | float64](arr []T) (ret T) {
 	}
 	return
 }
+
+func ToPtrs[T any](arr []T) (ret [](*T)) {
+	ret = make([](*T), len(arr))
+	for i := range arr {
+		ret[i] = &arr[i]
+	}
+	return
+}
