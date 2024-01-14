@@ -99,12 +99,12 @@ func (g *Graph) SetInputs(vals []float64) (err error) {
 	return
 }
 
-type Linear struct {
+type Module struct {
 	Graph
 	Params [](*Node)
 }
 
-func NewLinear(n int, label string) Linear {
+func NewLinear(n int, label string) Module {
 
 	intermediates := make([](Node), n+1)
 	inputs := make([](*Node), 2*n+1)
@@ -133,7 +133,7 @@ func NewLinear(n int, label string) Linear {
 		intermediates[i] = node
 	}
 
-	return Linear{
+	return Module{
 		Graph:  NewGraph(inputs, &output, ToPtrs(intermediates)),
 		Params: inputs[n:],
 	}
