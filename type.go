@@ -187,3 +187,45 @@ func (o *Optimizer) UpdateWeights(grads []float64) {
 		o.params[i] -= o.LearningRate * grads[i]
 	}
 }
+
+type Set[T comparable] map[T]bool
+
+type Stack[T any] struct {
+	data []T
+}
+
+// Push adds an element to the top of the stack.
+func (s *Stack[T]) Push(item T) {
+	s.data = append(s.data, item)
+}
+
+// Pop removes and returns the top element from the stack.
+func (s *Stack[T]) Pop() (t T, empty bool) {
+	if len(s.data) == 0 {
+		empty = true
+		return
+	}
+	lastIndex := len(s.data) - 1
+	t = s.data[lastIndex]
+	s.data = s.data[:lastIndex]
+	return
+}
+
+// Peek returns the top element of the stack without removing it.
+func (s *Stack[T]) Peek() (t T, err error) {
+	if len(s.data) == 0 {
+		err = fmt.Errorf("Stack is empty")
+		return
+	}
+	return s.data[len(s.data)-1], nil
+}
+
+// IsEmpty checks if the stack is empty.
+func (s *Stack[T]) IsEmpty() bool {
+	return len(s.data) == 0
+}
+
+// Size returns the number of elements in the stack.
+func (s *Stack[T]) Size() int {
+	return len(s.data)
+}
