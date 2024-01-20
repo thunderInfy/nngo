@@ -20,9 +20,9 @@ func TestBackProp1(t *testing.T) {
 	a = AddNode("a", &b, [](*Node){&x, &y})
 	b = MultiplyNode("b", &f, &a, &z)
 
-	graph := NewGraph([](*Node){&x, &y, &z}, &f, [](*Node){&a, &b})
+	graph := NewGraph([](*Node){&z, &x, &y}, &f, [](*Node){&a, &b})
 
-	err := graph.Forward([]float64{-2, 5, -4})
+	err := graph.Forward([]float64{-4, -2, 5})
 	Panic(err)
 	assert.True(t, x.Val == -2)
 	assert.True(t, y.Val == 5)
