@@ -1,6 +1,6 @@
 package nngo
 
-func (g *Graph) TopologicalSortUtil(n *Node, visited Set[*Node], sorted *Stack[*Node], reverse bool) {
+func (g *Graph) TopologicalSort(n *Node, visited Set[*Node], sorted *Stack[*Node], reverse bool) {
 	visited[n] = true
 
 	var neighbors [](*Node)
@@ -12,7 +12,7 @@ func (g *Graph) TopologicalSortUtil(n *Node, visited Set[*Node], sorted *Stack[*
 
 	for _, neighbor := range neighbors {
 		if !visited[neighbor] {
-			g.TopologicalSortUtil(neighbor, visited, sorted, reverse)
+			g.TopologicalSort(neighbor, visited, sorted, reverse)
 		}
 	}
 
@@ -25,7 +25,7 @@ func (g *Graph) Forward(inputValues []float64) (err error) {
 
 	for _, inp := range g.Inputs {
 		if !visited[inp] {
-			g.TopologicalSortUtil(inp, visited, &sorted, false)
+			g.TopologicalSort(inp, visited, &sorted, false)
 		}
 	}
 
@@ -48,7 +48,7 @@ func (g *Graph) Backprop(upstreamGrad float64) {
 	visited := Set[*Node]{}
 	sorted := Stack[*Node]{}
 
-	g.TopologicalSortUtil(g.Output, visited, &sorted, true)
+	g.TopologicalSort(g.Output, visited, &sorted, true)
 
 	g.Output.Grad = upstreamGrad
 
