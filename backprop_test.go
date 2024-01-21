@@ -18,7 +18,7 @@ func TestBackProp1(t *testing.T) {
 	z := InputSymbol("z", [](*Node){&b})
 	f := OutputSymbol("f", &b)
 	a = AddNode("a", [](*Node){&b}, [](*Node){&x, &y})
-	b = MultiplyNode("b", [](*Node){&f}, &a, &z)
+	b = MultiplyNode("b", [](*Node){&f}, [](*Node){&a, &z})
 
 	graph := NewGraph([](*Node){&z, &x, &y}, &f, [](*Node){&a, &b})
 
@@ -114,9 +114,9 @@ func TestBackProp4(t *testing.T) {
 	y := InputSymbol("y", [](*Node){&a, &b})
 	f := OutputSymbol("f", &e)
 	a = AddNode("a", [](*Node){&c, &d}, [](*Node){&x, &y})
-	b = MultiplyNode("b", [](*Node){&c, &d}, &x, &y)
+	b = MultiplyNode("b", [](*Node){&c, &d}, [](*Node){&x, &y})
 	c = AddNode("c", [](*Node){&e}, [](*Node){&a, &b})
-	d = MultiplyNode("d", [](*Node){&e}, &a, &b)
+	d = MultiplyNode("d", [](*Node){&e}, [](*Node){&a, &b})
 	e = AddNode("e", [](*Node){&f}, [](*Node){&c, &d})
 
 	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b, &c, &d, &e})
@@ -148,7 +148,7 @@ func TestBackProp5(t *testing.T) {
 	var a Node
 	x := InputSymbol("x", [](*Node){&a})
 	f := OutputSymbol("f", &a)
-	a = MultiplyNode("a", [](*Node){&f}, &x, &x)
+	a = MultiplyNode("a", [](*Node){&f}, [](*Node){&x, &x})
 
 	graph := NewGraph([](*Node){&x}, &f, [](*Node){&a})
 
@@ -162,4 +162,25 @@ func TestBackProp5(t *testing.T) {
 	assert.True(t, graph.Output.Grad == 1)
 	assert.True(t, graph.Intermediates[0].Grad == 1)
 	assert.True(t, graph.Inputs[0].Grad == 6)
+}
+
+// f(x) = x * x * x
+func TestBackProp6(t *testing.T) {
+	var a Node
+	x := InputSymbol("x", [](*Node){&a})
+	f := OutputSymbol("f", &a)
+	a = MultiplyNode("a", [](*Node){&f}, [](*Node){&x, &x, &x})
+
+	graph := NewGraph([](*Node){&x}, &f, [](*Node){&a})
+
+	err := graph.Forward([]float64{2})
+	Panic(err)
+	assert.True(t, x.Val == 2)
+	assert.True(t, a.Val == 8)
+	assert.True(t, f.Val == 8)
+
+	graph.Backprop(1)
+	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Intermediates[0].Grad == 1)
+	assert.True(t, graph.Inputs[0].Grad == 12)
 }

@@ -36,8 +36,11 @@ func (n *Node) ComputeGrad() {
 			inp.Grad += n.Grad
 		}
 	case Multiply:
-		n.Inputs[0].Grad += n.Grad * n.Inputs[1].Val
-		n.Inputs[1].Grad += n.Grad * n.Inputs[0].Val
+		for _, inp := range n.Inputs {
+			if inp.Val != 0 {
+				inp.Grad += (n.Grad * n.Val) / (inp.Val)
+			}
+		}
 	case "":
 		if n.IsOutputSymbol() {
 			n.Inputs[0].Grad += n.Grad
@@ -52,7 +55,9 @@ func (n *Node) ComputeVal() {
 			return n.Val
 		}))
 	case Multiply:
-		n.Val = n.Inputs[0].Val * n.Inputs[1].Val
+		n.Val = Product(Map(n.Inputs, func(n *Node) float64 {
+			return n.Val
+		}))
 	case "":
 		if n.IsOutputSymbol() {
 			n.Val = n.Inputs[0].Val
@@ -73,8 +78,8 @@ func AddNode(label string, outputs, inputs [](*Node)) Node {
 	return newNode(label, Add, inputs, outputs)
 }
 
-func MultiplyNode(label string, outputs [](*Node), input1 *Node, input2 *Node) Node {
-	return newNode(label, Multiply, [](*Node){input1, input2}, outputs)
+func MultiplyNode(label string, outputs, inputs [](*Node)) Node {
+	return newNode(label, Multiply, inputs, outputs)
 }
 
 func InputSymbol(label string, connectedTo [](*Node)) Node {
@@ -171,8 +176,7 @@ func NewLinear(n int, label string) Module {
 		node := MultiplyNode(
 			fmt.Sprintf("%s-prod-%d", label, i),
 			[](*Node){&intermediates[n]},
-			inputs[i],
-			inputs[i+n],
+			[](*Node){inputs[i], inputs[i+n]},
 		)
 		intermediates[i] = node
 	}

@@ -20,6 +20,14 @@ func Map[T, R any](arr []T, mapFunc func(t T) R) (ret []R) {
 	return
 }
 
+func Product[T int | float32 | float64](arr []T) (ret T) {
+	ret = 1
+	for _, t := range arr {
+		ret *= t
+	}
+	return
+}
+
 func Sum[T int | float32 | float64](arr []T) (ret T) {
 	ret = 0
 	for _, t := range arr {
