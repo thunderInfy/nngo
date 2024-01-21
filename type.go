@@ -29,6 +29,22 @@ func (n *Node) IsInputSymbol() bool {
 	return len(n.Inputs) == 0
 }
 
+func (n *Node) ComputeGrad() {
+	switch n.Op {
+	case Add:
+		for _, inp := range n.Inputs {
+			inp.Grad += n.Grad
+		}
+	case Multiply:
+		n.Inputs[0].Grad += n.Grad * n.Inputs[1].Val
+		n.Inputs[1].Grad += n.Grad * n.Inputs[0].Val
+	case "":
+		if n.IsOutputSymbol() {
+			n.Inputs[0].Grad += n.Grad
+		}
+	}
+}
+
 func (n *Node) ComputeVal() {
 	switch n.Op {
 	case Add:
