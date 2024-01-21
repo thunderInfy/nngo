@@ -53,12 +53,12 @@ func newNode(label string, op Op, inputs, outputs [](*Node)) Node {
 	}
 }
 
-func AddNode(label string, output *Node, inputs [](*Node)) Node {
-	return newNode(label, Add, inputs, [](*Node){output})
+func AddNode(label string, outputs, inputs [](*Node)) Node {
+	return newNode(label, Add, inputs, outputs)
 }
 
-func MultiplyNode(label string, output *Node, input1 *Node, input2 *Node) Node {
-	return newNode(label, Multiply, [](*Node){input1, input2}, [](*Node){output})
+func MultiplyNode(label string, outputs [](*Node), input1 *Node, input2 *Node) Node {
+	return newNode(label, Multiply, [](*Node){input1, input2}, outputs)
 }
 
 func InputSymbol(label string, connectedTo [](*Node)) Node {
@@ -87,6 +87,16 @@ func NewGraph(inputs [](*Node), output *Node, intermediates [](*Node)) Graph {
 		Output:        output,
 		Intermediates: intermediates,
 	}
+}
+
+func (g *Graph) ZeroGrad() {
+	for i := range g.Inputs {
+		g.Inputs[i].Grad = 0
+	}
+	for i := range g.Intermediates {
+		g.Intermediates[i].Grad = 0
+	}
+	g.Output.Grad = 0
 }
 
 func (g *Graph) SetInputs(vals []float64) (err error) {
@@ -139,12 +149,12 @@ func NewLinear(n int, label string) Module {
 	output := OutputSymbol(fmt.Sprintf("%s-output", label), &intermediates[n])
 	ptrs := ToPtrs(intermediates[:n])
 	ptrs = append(ptrs, &bias)
-	intermediates[n] = AddNode(fmt.Sprintf("%s-add", label), &output, ptrs)
+	intermediates[n] = AddNode(fmt.Sprintf("%s-add", label), [](*Node){&output}, ptrs)
 
 	for i := 0; i < n; i++ {
 		node := MultiplyNode(
 			fmt.Sprintf("%s-prod-%d", label, i),
-			&intermediates[n],
+			[](*Node){&intermediates[n]},
 			inputs[i],
 			inputs[i+n],
 		)

@@ -2,7 +2,7 @@ package nngo
 
 // dfs currently, can be implemented as bfs too
 func (n *Node) Backprop(upstreamGrad float64) {
-	n.Grad = upstreamGrad
+	n.Grad += upstreamGrad
 	switch n.Op {
 	case Add:
 		for _, inp := range n.Inputs {

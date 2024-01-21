@@ -17,8 +17,8 @@ func TestBackProp1(t *testing.T) {
 	y := InputSymbol("y", [](*Node){&a})
 	z := InputSymbol("z", [](*Node){&b})
 	f := OutputSymbol("f", &b)
-	a = AddNode("a", &b, [](*Node){&x, &y})
-	b = MultiplyNode("b", &f, &a, &z)
+	a = AddNode("a", [](*Node){&b}, [](*Node){&x, &y})
+	b = MultiplyNode("b", [](*Node){&f}, &a, &z)
 
 	graph := NewGraph([](*Node){&z, &x, &y}, &f, [](*Node){&a, &b})
 
@@ -84,11 +84,13 @@ func TestBackProp3(t *testing.T) {
 		err := linear.Forward([]float64{0, 2}, &optimizer)
 		Panic(err)
 		loss1 := math.Pow(linear.Graph.Output.Val, 2)
+		linear.Graph.ZeroGrad()
 		linear.Backprop(2*linear.Graph.Output.Val, &optimizer)
 
 		err = linear.Forward([]float64{3, 0}, &optimizer)
 		Panic(err)
 		loss2 := math.Pow(linear.Graph.Output.Val, 2)
+		linear.Graph.ZeroGrad()
 		linear.Backprop(2*linear.Graph.Output.Val, &optimizer)
 
 		losses = append(losses, loss1+loss2)
@@ -99,19 +101,25 @@ func TestBackProp3(t *testing.T) {
 	assert.True(t, SimpleFloatEqual(p[1]/p[2], -1./2., 1e-3))
 }
 
-// f(x) = xy + x + y
+/*
+T([x, y]) = [x+y, x*y]
+U = T(T([x, y]))
+f = U[0] + U[1]
+*/
 func TestBackProp4(t *testing.T) {
 
-	var a, b, c Node
+	var a, b, c, d, e Node
 
 	x := InputSymbol("x", [](*Node){&a, &b})
 	y := InputSymbol("y", [](*Node){&a, &b})
-	f := OutputSymbol("f", &c)
-	a = AddNode("a", &c, [](*Node){&x, &y})
-	b = MultiplyNode("b", &c, &x, &y)
-	c = AddNode("c", &f, [](*Node){&a, &b})
+	f := OutputSymbol("f", &e)
+	a = AddNode("a", [](*Node){&c, &d}, [](*Node){&x, &y})
+	b = MultiplyNode("b", [](*Node){&c, &d}, &x, &y)
+	c = AddNode("c", [](*Node){&e}, [](*Node){&a, &b})
+	d = MultiplyNode("d", [](*Node){&e}, &a, &b)
+	e = AddNode("e", [](*Node){&f}, [](*Node){&c, &d})
 
-	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b, &c})
+	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b, &c, &d, &e})
 
 	err := graph.Forward([]float64{2, 3})
 	Panic(err)
@@ -120,5 +128,17 @@ func TestBackProp4(t *testing.T) {
 	assert.True(t, a.Val == 5)
 	assert.True(t, b.Val == 6)
 	assert.True(t, c.Val == 11)
-	assert.True(t, f.Val == 11)
+	assert.True(t, d.Val == 30)
+	assert.True(t, e.Val == 41)
+	assert.True(t, f.Val == 41)
+
+	graph.Backprop(1)
+	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Intermediates[4].Grad == 1)
+	assert.True(t, graph.Intermediates[3].Grad == 1)
+	assert.True(t, graph.Intermediates[2].Grad == 1)
+	assert.True(t, graph.Intermediates[1].Grad == 6)
+	assert.True(t, graph.Intermediates[0].Grad == 7)
+	assert.True(t, graph.Inputs[0].Grad == 25)
+	assert.True(t, graph.Inputs[1].Grad == 19)
 }
