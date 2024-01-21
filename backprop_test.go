@@ -184,3 +184,47 @@ func TestBackProp6(t *testing.T) {
 	assert.True(t, graph.Intermediates[0].Grad == 1)
 	assert.True(t, graph.Inputs[0].Grad == 12)
 }
+
+// f(x) = relu(x + y)
+func TestBackProp7(t *testing.T) {
+	var a, b Node
+	x := InputSymbol("x", [](*Node){&a})
+	y := InputSymbol("y", [](*Node){&a})
+	f := OutputSymbol("f", &b)
+	a = AddNode("a", [](*Node){&b}, [](*Node){&x, &y})
+	b = ReluNode("b", &f, &a)
+
+	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b})
+
+	err := graph.Forward([]float64{2, 3})
+	Panic(err)
+	assert.True(t, x.Val == 2)
+	assert.True(t, y.Val == 3)
+	assert.True(t, a.Val == 5)
+	assert.True(t, b.Val == 5)
+	assert.True(t, f.Val == 5)
+
+	graph.Backprop(1)
+	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Intermediates[1].Grad == 1)
+	assert.True(t, graph.Intermediates[0].Grad == 1)
+	assert.True(t, graph.Inputs[1].Grad == 1)
+	assert.True(t, graph.Inputs[0].Grad == 1)
+
+	graph.ZeroGrad()
+
+	err = graph.Forward([]float64{2, -5})
+	Panic(err)
+	assert.True(t, x.Val == 2)
+	assert.True(t, y.Val == -5)
+	assert.True(t, a.Val == -3)
+	assert.True(t, b.Val == 0)
+	assert.True(t, f.Val == 0)
+
+	graph.Backprop(1)
+	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Intermediates[1].Grad == 1)
+	assert.True(t, graph.Intermediates[0].Grad == 0)
+	assert.True(t, graph.Inputs[1].Grad == 0)
+	assert.True(t, graph.Inputs[0].Grad == 0)
+}

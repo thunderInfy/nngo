@@ -1,6 +1,7 @@
 package nngo
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -32,6 +33,19 @@ func Sum[T int | float32 | float64](arr []T) (ret T) {
 	ret = 0
 	for _, t := range arr {
 		ret += t
+	}
+	return
+}
+
+func Max[T int | float32 | float64](values ...T) (ret T) {
+	if len(values) == 0 {
+		Panic(fmt.Errorf("error at least one value should be passed to max"))
+	}
+	ret = values[0]
+	for i := 1; i < len(values); i += 1 {
+		if ret < values[i] {
+			ret = values[i]
+		}
 	}
 	return
 }

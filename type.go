@@ -10,6 +10,7 @@ type Op string
 const (
 	Add      Op = "+"
 	Multiply Op = "*"
+	Relu     Op = "relu"
 )
 
 type Node struct {
@@ -41,6 +42,11 @@ func (n *Node) ComputeGrad() {
 				inp.Grad += (n.Grad * n.Val) / (inp.Val)
 			}
 		}
+	case Relu:
+		inp := n.Inputs[0]
+		if inp.Val > 0 {
+			inp.Grad += n.Grad
+		}
 	case "":
 		if n.IsOutputSymbol() {
 			n.Inputs[0].Grad += n.Grad
@@ -58,6 +64,8 @@ func (n *Node) ComputeVal() {
 		n.Val = Product(Map(n.Inputs, func(n *Node) float64 {
 			return n.Val
 		}))
+	case Relu:
+		n.Val = Max(0, n.Inputs[0].Val)
 	case "":
 		if n.IsOutputSymbol() {
 			n.Val = n.Inputs[0].Val
@@ -80,6 +88,10 @@ func AddNode(label string, outputs, inputs [](*Node)) Node {
 
 func MultiplyNode(label string, outputs, inputs [](*Node)) Node {
 	return newNode(label, Multiply, inputs, outputs)
+}
+
+func ReluNode(label string, output, input *Node) Node {
+	return newNode(label, Relu, [](*Node){input}, [](*Node){output})
 }
 
 func InputSymbol(label string, connectedTo [](*Node)) Node {
