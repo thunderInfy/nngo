@@ -22,9 +22,13 @@ func (g *Graph) TopologicalSortUtil(n *Node, visited Set[*Node], sorted *Stack[*
 	// visit node n
 	visited[n] = true
 
-	// visit its child - currently there is only atmost one child
-	if n.Output != nil && !visited[n.Output] {
-		g.TopologicalSortUtil(n.Output, visited, sorted)
+	// visit its children
+	if n.Outputs != nil {
+		for i := range n.Outputs {
+			if !visited[n.Outputs[i]] {
+				g.TopologicalSortUtil(n.Outputs[i], visited, sorted)
+			}
+		}
 	}
 
 	// no more children left, so put it in the sorted stack

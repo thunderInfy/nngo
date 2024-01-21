@@ -13,16 +13,16 @@ const (
 )
 
 type Node struct {
-	Label  string
-	Op     Op
-	Inputs [](*Node)
-	Output *Node
-	Val    float64
-	Grad   float64
+	Label   string
+	Op      Op
+	Inputs  [](*Node)
+	Outputs [](*Node)
+	Val     float64
+	Grad    float64
 }
 
 func (n *Node) IsOutputSymbol() bool {
-	return n.Output == nil && len(n.Inputs) == 1
+	return n.Outputs == nil && len(n.Inputs) == 1
 }
 
 func (n *Node) IsInputSymbol() bool {
@@ -44,27 +44,27 @@ func (n *Node) ComputeVal() {
 	}
 }
 
-func newNode(label string, op Op, inputs [](*Node), output *Node) Node {
+func newNode(label string, op Op, inputs, outputs [](*Node)) Node {
 	return Node{
-		Label:  label,
-		Op:     op,
-		Inputs: inputs,
-		Output: output,
+		Label:   label,
+		Op:      op,
+		Inputs:  inputs,
+		Outputs: outputs,
 	}
 }
 
 func AddNode(label string, output *Node, inputs [](*Node)) Node {
-	return newNode(label, Add, inputs, output)
+	return newNode(label, Add, inputs, [](*Node){output})
 }
 
 func MultiplyNode(label string, output *Node, input1 *Node, input2 *Node) Node {
-	return newNode(label, Multiply, [](*Node){input1, input2}, output)
+	return newNode(label, Multiply, [](*Node){input1, input2}, [](*Node){output})
 }
 
-func InputSymbol(label string, connectedTo *Node) Node {
+func InputSymbol(label string, connectedTo [](*Node)) Node {
 	return Node{
-		Label:  label,
-		Output: connectedTo,
+		Label:   label,
+		Outputs: connectedTo,
 	}
 }
 
@@ -128,12 +128,12 @@ func NewLinear(n int, label string) Module {
 	inputs := make([](*Node), 2*n+1)
 
 	for i := 0; i < n; i++ {
-		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), &intermediates[i])
+		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), [](*Node){&intermediates[i]})
 		inputs[i] = &node
-		temp := InputSymbol(fmt.Sprintf("%s-param-%d", label, i), &intermediates[i])
+		temp := InputSymbol(fmt.Sprintf("%s-param-%d", label, i), [](*Node){&intermediates[i]})
 		inputs[i+n] = &temp
 	}
-	bias := InputSymbol(fmt.Sprintf("%s-param-%d", label, n), &intermediates[n])
+	bias := InputSymbol(fmt.Sprintf("%s-param-%d", label, n), [](*Node){&intermediates[n]})
 	inputs[2*n] = &bias
 
 	output := OutputSymbol(fmt.Sprintf("%s-output", label), &intermediates[n])

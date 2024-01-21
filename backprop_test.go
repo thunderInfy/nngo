@@ -13,9 +13,9 @@ func TestBackProp1(t *testing.T) {
 
 	var a, b Node
 
-	x := InputSymbol("x", &a)
-	y := InputSymbol("y", &a)
-	z := InputSymbol("z", &b)
+	x := InputSymbol("x", [](*Node){&a})
+	y := InputSymbol("y", [](*Node){&a})
+	z := InputSymbol("z", [](*Node){&b})
 	f := OutputSymbol("f", &b)
 	a = AddNode("a", &b, [](*Node){&x, &y})
 	b = MultiplyNode("b", &f, &a, &z)
@@ -97,4 +97,28 @@ func TestBackProp3(t *testing.T) {
 	assert.True(t, IsStrictlyDecreasing(losses))
 	assert.True(t, SimpleFloatEqual(p[0]/p[2], -1./3., 1e-3))
 	assert.True(t, SimpleFloatEqual(p[1]/p[2], -1./2., 1e-3))
+}
+
+// f(x) = xy + x + y
+func TestBackProp4(t *testing.T) {
+
+	var a, b, c Node
+
+	x := InputSymbol("x", [](*Node){&a, &b})
+	y := InputSymbol("y", [](*Node){&a, &b})
+	f := OutputSymbol("f", &c)
+	a = AddNode("a", &c, [](*Node){&x, &y})
+	b = MultiplyNode("b", &c, &x, &y)
+	c = AddNode("c", &f, [](*Node){&a, &b})
+
+	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b, &c})
+
+	err := graph.Forward([]float64{2, 3})
+	Panic(err)
+	assert.True(t, x.Val == 2)
+	assert.True(t, y.Val == 3)
+	assert.True(t, a.Val == 5)
+	assert.True(t, b.Val == 6)
+	assert.True(t, c.Val == 11)
+	assert.True(t, f.Val == 11)
 }
