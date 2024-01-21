@@ -142,3 +142,24 @@ func TestBackProp4(t *testing.T) {
 	assert.True(t, graph.Inputs[0].Grad == 25)
 	assert.True(t, graph.Inputs[1].Grad == 19)
 }
+
+// f(x) = x * x
+func TestBackProp5(t *testing.T) {
+	var a Node
+	x := InputSymbol("x", [](*Node){&a})
+	f := OutputSymbol("f", &a)
+	a = MultiplyNode("a", [](*Node){&f}, &x, &x)
+
+	graph := NewGraph([](*Node){&x}, &f, [](*Node){&a})
+
+	err := graph.Forward([]float64{3})
+	Panic(err)
+	assert.True(t, x.Val == 3)
+	assert.True(t, a.Val == 9)
+	assert.True(t, f.Val == 9)
+
+	graph.Backprop(1)
+	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Intermediates[0].Grad == 1)
+	assert.True(t, graph.Inputs[0].Grad == 6)
+}
