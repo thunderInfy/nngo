@@ -110,14 +110,14 @@ func OutputSymbol(label string, connectedTo *Node) Node {
 
 type Graph struct {
 	Inputs        [](*Node)
-	Output        *Node
+	Outputs       [](*Node)
 	Intermediates [](*Node)
 }
 
-func NewGraph(inputs [](*Node), output *Node, intermediates [](*Node)) Graph {
+func NewGraph(inputs, outputs, intermediates [](*Node)) Graph {
 	return Graph{
 		Inputs:        inputs,
-		Output:        output,
+		Outputs:       outputs,
 		Intermediates: intermediates,
 	}
 }
@@ -129,7 +129,9 @@ func (g *Graph) ZeroGrad() {
 	for i := range g.Intermediates {
 		g.Intermediates[i].Grad = 0
 	}
-	g.Output.Grad = 0
+	for i := range g.Outputs {
+		g.Outputs[i].Grad = 0
+	}
 }
 
 func (g *Graph) SetInputs(vals []float64) (err error) {
@@ -194,7 +196,7 @@ func NewLinear(n int, label string) Module {
 	}
 
 	return Module{
-		Graph:  NewGraph(inputs, &output, ToPtrs(intermediates)),
+		Graph:  NewGraph(inputs, [](*Node){&output}, ToPtrs(intermediates)),
 		Params: inputs[n:],
 	}
 }

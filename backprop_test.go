@@ -20,7 +20,7 @@ func TestBackProp1(t *testing.T) {
 	a = AddNode("a", [](*Node){&b}, [](*Node){&x, &y})
 	b = MultiplyNode("b", [](*Node){&f}, [](*Node){&a, &z})
 
-	graph := NewGraph([](*Node){&z, &x, &y}, &f, [](*Node){&a, &b})
+	graph := NewGraph([](*Node){&z, &x, &y}, [](*Node){&f}, [](*Node){&a, &b})
 
 	err := graph.Forward([]float64{-4, -2, 5})
 	Panic(err)
@@ -58,7 +58,7 @@ func TestBackProp2(t *testing.T) {
 	assert.True(t, graph.Intermediates[1].Val == -30)
 	assert.True(t, graph.Intermediates[2].Val == 14)
 	assert.True(t, graph.Intermediates[3].Val == -19)
-	assert.True(t, graph.Output.Val == -19)
+	assert.True(t, graph.Outputs[0].Val == -19)
 
 	graph.Backprop(1)
 	assert.True(t, graph.Inputs[0].Grad == -1)
@@ -72,7 +72,7 @@ func TestBackProp2(t *testing.T) {
 	assert.True(t, graph.Intermediates[1].Grad == 1)
 	assert.True(t, graph.Intermediates[2].Grad == 1)
 	assert.True(t, graph.Intermediates[3].Grad == 1)
-	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
 }
 
 // given points (0, 2) and (3, 0), find the equation of line
@@ -83,15 +83,15 @@ func TestBackProp3(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		err := linear.Forward([]float64{0, 2}, &optimizer)
 		Panic(err)
-		loss1 := math.Pow(linear.Graph.Output.Val, 2)
+		loss1 := math.Pow(linear.Graph.Outputs[0].Val, 2)
 		linear.Graph.ZeroGrad()
-		linear.Backprop(2*linear.Graph.Output.Val, &optimizer)
+		linear.Backprop(2*linear.Graph.Outputs[0].Val, &optimizer)
 
 		err = linear.Forward([]float64{3, 0}, &optimizer)
 		Panic(err)
-		loss2 := math.Pow(linear.Graph.Output.Val, 2)
+		loss2 := math.Pow(linear.Graph.Outputs[0].Val, 2)
 		linear.Graph.ZeroGrad()
-		linear.Backprop(2*linear.Graph.Output.Val, &optimizer)
+		linear.Backprop(2*linear.Graph.Outputs[0].Val, &optimizer)
 
 		losses = append(losses, loss1+loss2)
 	}
@@ -119,7 +119,7 @@ func TestBackProp4(t *testing.T) {
 	d = MultiplyNode("d", [](*Node){&e}, [](*Node){&a, &b})
 	e = AddNode("e", [](*Node){&f}, [](*Node){&c, &d})
 
-	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b, &c, &d, &e})
+	graph := NewGraph([](*Node){&x, &y}, [](*Node){&f}, [](*Node){&a, &b, &c, &d, &e})
 
 	err := graph.Forward([]float64{2, 3})
 	Panic(err)
@@ -133,7 +133,7 @@ func TestBackProp4(t *testing.T) {
 	assert.True(t, f.Val == 41)
 
 	graph.Backprop(1)
-	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
 	assert.True(t, graph.Intermediates[4].Grad == 1)
 	assert.True(t, graph.Intermediates[3].Grad == 1)
 	assert.True(t, graph.Intermediates[2].Grad == 1)
@@ -150,7 +150,7 @@ func TestBackProp5(t *testing.T) {
 	f := OutputSymbol("f", &a)
 	a = MultiplyNode("a", [](*Node){&f}, [](*Node){&x, &x})
 
-	graph := NewGraph([](*Node){&x}, &f, [](*Node){&a})
+	graph := NewGraph([](*Node){&x}, [](*Node){&f}, [](*Node){&a})
 
 	err := graph.Forward([]float64{3})
 	Panic(err)
@@ -159,7 +159,7 @@ func TestBackProp5(t *testing.T) {
 	assert.True(t, f.Val == 9)
 
 	graph.Backprop(1)
-	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
 	assert.True(t, graph.Intermediates[0].Grad == 1)
 	assert.True(t, graph.Inputs[0].Grad == 6)
 }
@@ -171,7 +171,7 @@ func TestBackProp6(t *testing.T) {
 	f := OutputSymbol("f", &a)
 	a = MultiplyNode("a", [](*Node){&f}, [](*Node){&x, &x, &x})
 
-	graph := NewGraph([](*Node){&x}, &f, [](*Node){&a})
+	graph := NewGraph([](*Node){&x}, [](*Node){&f}, [](*Node){&a})
 
 	err := graph.Forward([]float64{2})
 	Panic(err)
@@ -180,7 +180,7 @@ func TestBackProp6(t *testing.T) {
 	assert.True(t, f.Val == 8)
 
 	graph.Backprop(1)
-	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
 	assert.True(t, graph.Intermediates[0].Grad == 1)
 	assert.True(t, graph.Inputs[0].Grad == 12)
 }
@@ -194,7 +194,7 @@ func TestBackProp7(t *testing.T) {
 	a = AddNode("a", [](*Node){&b}, [](*Node){&x, &y})
 	b = ReluNode("b", &f, &a)
 
-	graph := NewGraph([](*Node){&x, &y}, &f, [](*Node){&a, &b})
+	graph := NewGraph([](*Node){&x, &y}, [](*Node){&f}, [](*Node){&a, &b})
 
 	err := graph.Forward([]float64{2, 3})
 	Panic(err)
@@ -205,7 +205,7 @@ func TestBackProp7(t *testing.T) {
 	assert.True(t, f.Val == 5)
 
 	graph.Backprop(1)
-	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
 	assert.True(t, graph.Intermediates[1].Grad == 1)
 	assert.True(t, graph.Intermediates[0].Grad == 1)
 	assert.True(t, graph.Inputs[1].Grad == 1)
@@ -222,7 +222,7 @@ func TestBackProp7(t *testing.T) {
 	assert.True(t, f.Val == 0)
 
 	graph.Backprop(1)
-	assert.True(t, graph.Output.Grad == 1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
 	assert.True(t, graph.Intermediates[1].Grad == 1)
 	assert.True(t, graph.Intermediates[0].Grad == 0)
 	assert.True(t, graph.Inputs[1].Grad == 0)

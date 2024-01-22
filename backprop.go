@@ -48,9 +48,15 @@ func (g *Graph) Backprop(upstreamGrad float64) {
 	visited := Set[*Node]{}
 	sorted := Stack[*Node]{}
 
-	g.TopologicalSort(g.Output, visited, &sorted, true)
+	for _, out := range g.Outputs {
+		if !visited[out] {
+			g.TopologicalSort(out, visited, &sorted, true)
+		}
+	}
 
-	g.Output.Grad = upstreamGrad
+	for i := range g.Outputs {
+		g.Outputs[i].Grad = upstreamGrad
+	}
 
 	for {
 		n, empty := sorted.Pop()
