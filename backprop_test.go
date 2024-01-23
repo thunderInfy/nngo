@@ -228,3 +228,25 @@ func TestBackProp7(t *testing.T) {
 	assert.True(t, graph.Inputs[1].Grad == 0)
 	assert.True(t, graph.Inputs[0].Grad == 0)
 }
+
+// f(x) = exp(x)
+func TestBackprop8(t *testing.T) {
+	var a Node
+	x := InputSymbol("x", [](*Node){&a})
+	f := OutputSymbol("f", &a)
+	a = ExpNode("a", &f, &x)
+
+	graph := NewGraph([](*Node){&x}, [](*Node){&f}, [](*Node){&a})
+
+	err := graph.Forward([]float64{1})
+	Panic(err)
+
+	assert.True(t, x.Val == 1)
+	assert.True(t, SimpleFloatEqual(a.Val, math.Exp(1), 1e-6))
+	assert.True(t, SimpleFloatEqual(f.Val, math.Exp(1), 1e-6))
+
+	graph.Backprop(1)
+	assert.True(t, graph.Outputs[0].Grad == 1)
+	assert.True(t, graph.Intermediates[0].Grad == 1)
+	assert.True(t, SimpleFloatEqual(graph.Inputs[0].Grad, math.Exp(1), 1e-6))
+}

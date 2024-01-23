@@ -2,6 +2,7 @@ package nngo
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -11,6 +12,7 @@ const (
 	Add      Op = "+"
 	Multiply Op = "*"
 	Relu     Op = "relu"
+	Exp      Op = "exp"
 )
 
 type Node struct {
@@ -47,6 +49,9 @@ func (n *Node) ComputeGrad() {
 		if inp.Val > 0 {
 			inp.Grad += n.Grad
 		}
+	case Exp:
+		inp := n.Inputs[0]
+		inp.Grad += n.Grad * n.Val
 	case "":
 		if n.IsOutputSymbol() {
 			n.Inputs[0].Grad += n.Grad
@@ -66,6 +71,8 @@ func (n *Node) ComputeVal() {
 		}))
 	case Relu:
 		n.Val = Max(0, n.Inputs[0].Val)
+	case Exp:
+		n.Val = math.Exp(n.Inputs[0].Val)
 	case "":
 		if n.IsOutputSymbol() {
 			n.Val = n.Inputs[0].Val
@@ -92,6 +99,10 @@ func MultiplyNode(label string, outputs, inputs [](*Node)) Node {
 
 func ReluNode(label string, output, input *Node) Node {
 	return newNode(label, Relu, [](*Node){input}, [](*Node){output})
+}
+
+func ExpNode(label string, output, input *Node) Node {
+	return newNode(label, Exp, [](*Node){input}, [](*Node){output})
 }
 
 func InputSymbol(label string, connectedTo [](*Node)) Node {
