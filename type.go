@@ -169,8 +169,8 @@ func (m *Module) Forward(inputValues []float64, optimizer *Optimizer) (err error
 	return
 }
 
-func (m *Module) Backprop(upstreamGrad float64, optimizer *Optimizer) {
-	m.Graph.Backprop(upstreamGrad)
+func (m *Module) Backprop(upstreamGrads []float64, optimizer *Optimizer) {
+	m.Graph.Backprop(upstreamGrads)
 	grads := make([]float64, len(m.Params))
 	for i := range grads {
 		grads[i] = m.Params[i].Grad
@@ -178,37 +178,83 @@ func (m *Module) Backprop(upstreamGrad float64, optimizer *Optimizer) {
 	optimizer.UpdateWeights(grads)
 }
 
-func NewLinear(n int, label string) Module {
+func NewLinear(n1 int, n2 int, label string) Module {
+	inputs := make([](*Node), n1)
+	weights := make([](*Node), n1*n2)
+	biases := make([](*Node), n2)
+	prods := make([](Node), n1*n2)
+	adds := make([](Node), n2)
+	outputs := make([](*Node), n2)
 
-	intermediates := make([](Node), n+1)
-	inputs := make([](*Node), 2*n+1)
-
-	for i := 0; i < n; i++ {
-		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), [](*Node){&intermediates[i]})
+	// initialize inputs
+	for i := 0; i < n1; i++ {
+		connectedTo := [](*Node){}
+		for j := 0; j < n2; j++ {
+			connectedTo = append(connectedTo, &prods[i+j*n1])
+		}
+		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), connectedTo)
 		inputs[i] = &node
-		temp := InputSymbol(fmt.Sprintf("%s-param-%d", label, i), [](*Node){&intermediates[i]})
-		inputs[i+n] = &temp
 	}
-	bias := InputSymbol(fmt.Sprintf("%s-param-%d", label, n), [](*Node){&intermediates[n]})
-	inputs[2*n] = &bias
 
-	output := OutputSymbol(fmt.Sprintf("%s-output", label), &intermediates[n])
-	ptrs := ToPtrs(intermediates[:n])
-	ptrs = append(ptrs, &bias)
-	intermediates[n] = AddNode(fmt.Sprintf("%s-add", label), [](*Node){&output}, ptrs)
+	// initialize weights
+	for i := 0; i < n2; i++ {
+		for j := 0; j < n1; j++ {
+			num := j + i*n1
+			node := InputSymbol(fmt.Sprintf("%s-weight-%d", label, num), [](*Node){&prods[j+i*n1]})
+			weights[num] = &node
+		}
+	}
 
-	for i := 0; i < n; i++ {
-		node := MultiplyNode(
-			fmt.Sprintf("%s-prod-%d", label, i),
-			[](*Node){&intermediates[n]},
-			[](*Node){inputs[i], inputs[i+n]},
+	// initialize biases
+	for i := 0; i < n2; i++ {
+		node := InputSymbol(fmt.Sprintf("%s-bias-%d", label, i), [](*Node){&adds[i]})
+		biases[i] = &node
+	}
+
+	// initialize prods
+	for i := 0; i < n2; i++ {
+		for j := 0; j < n1; j++ {
+			num := j + i*n1
+			prods[num] = MultiplyNode(
+				fmt.Sprintf("%s-prod-%d", label, num),
+				[](*Node){&adds[i]},
+				[](*Node){inputs[j], weights[num]},
+			)
+		}
+	}
+
+	// initalize outputs
+	for i := 0; i < n2; i++ {
+		node := OutputSymbol(fmt.Sprintf("%s-output-%d", label, i), &adds[i])
+		outputs[i] = &node
+	}
+
+	// initialize adds
+	for i := 0; i < n2; i++ {
+		addInputs := ToPtrs(prods[(n1 * i):(n1 + n1*i)])
+		addInputs = append(addInputs, biases[i])
+
+		adds[i] = AddNode(
+			fmt.Sprintf("%s-add-%d", label, i),
+			[](*Node){outputs[i]},
+			addInputs,
 		)
-		intermediates[i] = node
 	}
+
+	inps := inputs
+	for i := 0; i < n2; i++ {
+		for j := 0; j < n1; j++ {
+			inps = append(inps, weights[j+i*n1])
+		}
+		inps = append(inps, biases[i])
+	}
+
+	intermediates := ToPtrs(prods)
+	intermediates = append(intermediates, ToPtrs(adds)...)
 
 	return Module{
-		Graph:  NewGraph(inputs, [](*Node){&output}, ToPtrs(intermediates)),
-		Params: inputs[n:],
+		Graph:  NewGraph(inps, outputs, intermediates),
+		Params: inps[n1:],
 	}
 }
 

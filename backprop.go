@@ -10,9 +10,9 @@ func (g *Graph) TopologicalSort(n *Node, visited Set[*Node], sorted *Stack[*Node
 		neighbors = n.Outputs
 	}
 
-	for _, neighbor := range neighbors {
-		if !visited[neighbor] {
-			g.TopologicalSort(neighbor, visited, sorted, reverse)
+	for i := range neighbors {
+		if !visited[neighbors[i]] {
+			g.TopologicalSort(neighbors[i], visited, sorted, reverse)
 		}
 	}
 
@@ -44,7 +44,7 @@ func (g *Graph) Forward(inputValues []float64) (err error) {
 	return
 }
 
-func (g *Graph) Backprop(upstreamGrad float64) {
+func (g *Graph) Backprop(upstreamGrads []float64) {
 	visited := Set[*Node]{}
 	sorted := Stack[*Node]{}
 
@@ -55,7 +55,7 @@ func (g *Graph) Backprop(upstreamGrad float64) {
 	}
 
 	for i := range g.Outputs {
-		g.Outputs[i].Grad = upstreamGrad
+		g.Outputs[i].Grad = upstreamGrads[i]
 	}
 
 	for {

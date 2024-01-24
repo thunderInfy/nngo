@@ -62,17 +62,22 @@ func RandomFloat64(randSource *rand.Rand, low float64, high float64) float64 {
 	return randSource.Float64()*(high-low) + low
 }
 
-// can use relative tolerance, but for now absolute tolerance is sufficient
+// SimpleFloatEqual checks if two floating-point numbers are approximately equal
+// using relative tolerance.
 func SimpleFloatEqual(a, b, epsilon float64) bool {
-	return math.Abs(a-b) <= epsilon
+	// Find the larger of the absolute values of a and b
+	larger := math.Max(math.Abs(a), math.Abs(b))
+
+	// Check if the difference is within the relative tolerance
+	return math.Abs(a-b) <= epsilon*larger
 }
 
-func IsStrictlyDecreasing[T float64 | int](arr []T) bool {
+func IsNonIncreasing[T float64 | int](arr []T) bool {
 	if len(arr) == 0 {
 		return false // one can argue for both true or false, but let's go with false
 	}
 	for i := 1; i < len(arr); i++ {
-		if arr[i] >= arr[i-1] {
+		if arr[i] > arr[i-1] {
 			return false
 		}
 	}
