@@ -135,14 +135,14 @@ func TestBackProp4(t *testing.T) {
 	assert.Equal(t, 41.0, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[4].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[3].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[2].Grad)
-	assert.Equal(t, 6.0, graph.Intermediates[1].Grad)
-	assert.Equal(t, 7.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, 25.0, graph.Inputs[0].Grad)
-	assert.Equal(t, 19.0, graph.Inputs[1].Grad)
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, e.Grad)
+	assert.Equal(t, 1.0, d.Grad)
+	assert.Equal(t, 1.0, c.Grad)
+	assert.Equal(t, 6.0, b.Grad)
+	assert.Equal(t, 7.0, a.Grad)
+	assert.Equal(t, 25.0, x.Grad)
+	assert.Equal(t, 19.0, y.Grad)
 
 }
 
@@ -162,9 +162,9 @@ func TestBackProp5(t *testing.T) {
 	assert.Equal(t, 9.0, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, 6.0, graph.Inputs[0].Grad)
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, a.Grad)
+	assert.Equal(t, 6.0, x.Grad)
 }
 
 // f(x) = x * x * x
@@ -183,9 +183,9 @@ func TestBackProp6(t *testing.T) {
 	assert.Equal(t, 8.0, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, 12.0, graph.Inputs[0].Grad)
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, a.Grad)
+	assert.Equal(t, 12.0, x.Grad)
 }
 
 // f(x) = relu(x + y)
@@ -208,11 +208,11 @@ func TestBackProp7(t *testing.T) {
 	assert.Equal(t, 5.0, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[1].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, 1.0, graph.Inputs[1].Grad)
-	assert.Equal(t, 1.0, graph.Inputs[0].Grad)
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, b.Grad)
+	assert.Equal(t, 1.0, a.Grad)
+	assert.Equal(t, 1.0, y.Grad)
+	assert.Equal(t, 1.0, x.Grad)
 
 	graph.ZeroGrad()
 
@@ -225,11 +225,11 @@ func TestBackProp7(t *testing.T) {
 	assert.Equal(t, 0.0, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[1].Grad)
-	assert.Equal(t, 0.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, 0.0, graph.Inputs[1].Grad)
-	assert.Equal(t, 0.0, graph.Inputs[0].Grad)
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, b.Grad)
+	assert.Equal(t, 0.0, a.Grad)
+	assert.Equal(t, 0.0, y.Grad)
+	assert.Equal(t, 0.0, x.Grad)
 
 }
 
@@ -250,9 +250,9 @@ func TestBackprop8(t *testing.T) {
 	assert.True(t, SimpleFloatEqual(f.Val, math.Exp(1), 1e-3))
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.True(t, SimpleFloatEqual(graph.Inputs[0].Grad, math.Exp(1), 1e-3))
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, a.Grad)
+	assert.True(t, SimpleFloatEqual(x.Grad, math.Exp(1), 1e-3))
 }
 
 /*
@@ -324,14 +324,14 @@ func TestBackProp10(t *testing.T) {
 	assert.Equal(t, 3.0, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, -2.0, graph.Inputs[0].Grad)
-	assert.Equal(t, 4.0, graph.Inputs[1].Grad)
-	assert.Equal(t, -1.0, graph.Inputs[2].Grad)
-	assert.Equal(t, 1.0, graph.Inputs[3].Grad)
-	assert.Equal(t, 2.0, graph.Inputs[4].Grad)
-	assert.Equal(t, 3.0, graph.Inputs[5].Grad)
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, a.Grad)
+	assert.Equal(t, -2.0, x1.Grad)
+	assert.Equal(t, 4.0, x2.Grad)
+	assert.Equal(t, -1.0, x3.Grad)
+	assert.Equal(t, 1.0, y1.Grad)
+	assert.Equal(t, 2.0, y2.Grad)
+	assert.Equal(t, 3.0, y3.Grad)
 }
 
 // f(x) = 1/x
@@ -351,7 +351,7 @@ func TestBackProp11(t *testing.T) {
 	assert.Equal(t, 0.2, f.Val)
 
 	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.True(t, SimpleFloatEqual(-0.04, graph.Inputs[0].Grad, 1e-3))
+	assert.Equal(t, 1.0, f.Grad)
+	assert.Equal(t, 1.0, a.Grad)
+	assert.True(t, SimpleFloatEqual(-0.04, x.Grad, 1e-3))
 }
