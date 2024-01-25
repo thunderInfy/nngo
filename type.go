@@ -9,11 +9,12 @@ import (
 type Op string
 
 const (
-	Add      Op = "+"
-	Multiply Op = "*"
-	Relu     Op = "relu"
-	Exp      Op = "exp"
-	Dot      Op = "dot"
+	Add        Op = "+"
+	Multiply   Op = "*"
+	Relu       Op = "relu"
+	Exp        Op = "exp"
+	Dot        Op = "dot"
+	Reciprocal Op = "reciprocal"
 )
 
 type Node struct {
@@ -62,6 +63,8 @@ func (n *Node) ComputeGrad() {
 				n.Inputs[i].Grad += n.Grad * n.Inputs[i-d].Val
 			}
 		}
+	case Reciprocal:
+		n.Inputs[0].Grad += n.Grad * -1 * n.Val * n.Val
 	case "":
 		if n.IsOutputSymbol() {
 			n.Inputs[0].Grad += n.Grad
@@ -89,6 +92,8 @@ func (n *Node) ComputeVal() {
 		})
 		d := len(vals) / 2
 		n.Val = DotProduct(vals[:d], vals[d:])
+	case Reciprocal:
+		n.Val = 1 / n.Inputs[0].Val
 	case "":
 		if n.IsOutputSymbol() {
 			n.Val = n.Inputs[0].Val
@@ -103,6 +108,10 @@ func newNode(label string, op Op, inputs, outputs [](*Node)) Node {
 		Inputs:  inputs,
 		Outputs: outputs,
 	}
+}
+
+func ReciprocalNode(label string, output, input *Node) Node {
+	return newNode(label, Reciprocal, [](*Node){input}, [](*Node){output})
 }
 
 func DotNode(label string, outputs, inputs [](*Node)) Node {

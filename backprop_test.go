@@ -333,3 +333,25 @@ func TestBackProp10(t *testing.T) {
 	assert.Equal(t, 2.0, graph.Inputs[4].Grad)
 	assert.Equal(t, 3.0, graph.Inputs[5].Grad)
 }
+
+// f(x) = 1/x
+func TestBackProp11(t *testing.T) {
+	var a Node
+	x := InputSymbol("x", [](*Node){&a})
+	f := OutputSymbol("f", &a)
+	a = ReciprocalNode("a", &f, &x)
+
+	graph := NewGraph([](*Node){&x}, [](*Node){&f}, [](*Node){&a})
+
+	err := graph.Forward([]float64{5})
+	Panic(err)
+
+	assert.Equal(t, 5.0, x.Val)
+	assert.Equal(t, 0.2, a.Val)
+	assert.Equal(t, 0.2, f.Val)
+
+	graph.Backprop([]float64{1})
+	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
+	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
+	assert.True(t, SimpleFloatEqual(-0.04, graph.Inputs[0].Grad, 1e-3))
+}
