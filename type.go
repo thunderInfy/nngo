@@ -13,6 +13,7 @@ const (
 	Multiply Op = "*"
 	Relu     Op = "relu"
 	Exp      Op = "exp"
+	Dot      Op = "dot"
 )
 
 type Node struct {
@@ -52,6 +53,15 @@ func (n *Node) ComputeGrad() {
 	case Exp:
 		inp := n.Inputs[0]
 		inp.Grad += n.Grad * n.Val
+	case Dot:
+		d := len(n.Inputs) / 2
+		for i := range n.Inputs {
+			if i < d {
+				n.Inputs[i].Grad += n.Grad * n.Inputs[i+d].Val
+			} else {
+				n.Inputs[i].Grad += n.Grad * n.Inputs[i-d].Val
+			}
+		}
 	case "":
 		if n.IsOutputSymbol() {
 			n.Inputs[0].Grad += n.Grad
@@ -73,6 +83,12 @@ func (n *Node) ComputeVal() {
 		n.Val = Max(0, n.Inputs[0].Val)
 	case Exp:
 		n.Val = math.Exp(n.Inputs[0].Val)
+	case Dot:
+		vals := Map(n.Inputs, func(n *Node) float64 {
+			return n.Val
+		})
+		d := len(vals) / 2
+		n.Val = DotProduct(vals[:d], vals[d:])
 	case "":
 		if n.IsOutputSymbol() {
 			n.Val = n.Inputs[0].Val
@@ -87,6 +103,10 @@ func newNode(label string, op Op, inputs, outputs [](*Node)) Node {
 		Inputs:  inputs,
 		Outputs: outputs,
 	}
+}
+
+func DotNode(label string, outputs, inputs [](*Node)) Node {
+	return newNode(label, Dot, inputs, outputs)
 }
 
 func AddNode(label string, outputs, inputs [](*Node)) Node {

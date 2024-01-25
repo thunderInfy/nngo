@@ -293,3 +293,43 @@ func TestBackProp9(t *testing.T) {
 	assert.True(t, SimpleFloatEqual(p[3]/p[5], -1./3., 0.05))
 	assert.True(t, SimpleFloatEqual(p[4]/p[5], 1., 0.05))
 }
+
+// f([x1, ..., xn], [y1, ..., yn]) = Dot(x, y)
+func TestBackProp10(t *testing.T) {
+	var a Node
+	x1 := InputSymbol("x1", [](*Node){&a})
+	x2 := InputSymbol("x2", [](*Node){&a})
+	x3 := InputSymbol("x3", [](*Node){&a})
+
+	y1 := InputSymbol("y1", [](*Node){&a})
+	y2 := InputSymbol("y2", [](*Node){&a})
+	y3 := InputSymbol("y3", [](*Node){&a})
+
+	f := OutputSymbol("f", &a)
+
+	a = DotNode("a", [](*Node){&f}, [](*Node){&x1, &x2, &x3, &y1, &y2, &y3})
+
+	graph := NewGraph([](*Node){&x1, &x2, &x3, &y1, &y2, &y3}, [](*Node){&f}, [](*Node){&a})
+
+	err := graph.Forward([]float64{1, 2, 3, -2, 4, -1})
+	Panic(err)
+
+	assert.Equal(t, 1.0, x1.Val)
+	assert.Equal(t, 2.0, x2.Val)
+	assert.Equal(t, 3.0, x3.Val)
+	assert.Equal(t, -2.0, y1.Val)
+	assert.Equal(t, 4.0, y2.Val)
+	assert.Equal(t, -1.0, y3.Val)
+	assert.Equal(t, 3.0, a.Val)
+	assert.Equal(t, 3.0, f.Val)
+
+	graph.Backprop([]float64{1})
+	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
+	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
+	assert.Equal(t, -2.0, graph.Inputs[0].Grad)
+	assert.Equal(t, 4.0, graph.Inputs[1].Grad)
+	assert.Equal(t, -1.0, graph.Inputs[2].Grad)
+	assert.Equal(t, 1.0, graph.Inputs[3].Grad)
+	assert.Equal(t, 2.0, graph.Inputs[4].Grad)
+	assert.Equal(t, 3.0, graph.Inputs[5].Grad)
+}

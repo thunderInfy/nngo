@@ -83,3 +83,10 @@ func IsNonIncreasing[T float64 | int](arr []T) bool {
 	}
 	return true
 }
+
+func DotProduct(a, b []float64) (res float64) {
+	for i := range a {
+		res += a[i] * b[i]
+	}
+	return res
+}
