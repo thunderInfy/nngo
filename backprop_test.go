@@ -335,20 +335,23 @@ func TestBackProp10(t *testing.T) {
 func TestBackProp11(t *testing.T) {
 	var a Node
 	x := InputSymbol("x", [](*Node){&a})
-	f := OutputSymbol("f", &a)
-	a = ReciprocalNode("a", &f, &x)
+	f1 := OutputSymbol("f1", &a)
+	f2 := OutputSymbol("f2", &a)
+	a = ReciprocalNode("a", [](*Node){&f1, &f2}, &x)
 
-	graph := NewGraph([](*Node){&x}, [](*Node){&f}, [](*Node){&a})
+	graph := NewGraph([](*Node){&x}, [](*Node){&f1, &f2}, [](*Node){&a})
 
 	err := graph.Forward([]float64{5})
 	Panic(err)
 
 	assert.Equal(t, 5.0, x.Val)
 	assert.Equal(t, 0.2, a.Val)
-	assert.Equal(t, 0.2, f.Val)
+	assert.Equal(t, 0.2, f1.Val)
+	assert.Equal(t, 0.2, f2.Val)
 
-	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, f.Grad)
-	assert.Equal(t, 1.0, a.Grad)
-	assert.True(t, SimpleFloatEqual(-0.04, x.Grad, 1e-3))
+	graph.Backprop([]float64{1, 1})
+	assert.Equal(t, 1.0, f1.Grad)
+	assert.Equal(t, 1.0, f2.Grad)
+	assert.Equal(t, 2.0, a.Grad)
+	assert.True(t, SimpleFloatEqual(-0.08, x.Grad, 1e-3))
 }

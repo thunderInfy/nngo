@@ -110,8 +110,8 @@ func newNode(label string, op Op, inputs, outputs [](*Node)) Node {
 	}
 }
 
-func ReciprocalNode(label string, output, input *Node) Node {
-	return newNode(label, Reciprocal, [](*Node){input}, [](*Node){output})
+func ReciprocalNode(label string, outputs [](*Node), input *Node) Node {
+	return newNode(label, Reciprocal, [](*Node){input}, outputs)
 }
 
 func DotNode(label string, outputs, inputs [](*Node)) Node {
