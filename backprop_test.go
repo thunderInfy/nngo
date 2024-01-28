@@ -93,8 +93,8 @@ func TestBackProp3(t *testing.T) {
 	}
 	p := optimizer.params
 	assert.True(t, IsNonIncreasing(losses))
-	assert.True(t, SimpleFloatEqual(p[0]/p[2], -1./3., 5e-2))
-	assert.True(t, SimpleFloatEqual(p[1]/p[2], -1./2., 5e-2))
+	assert.InEpsilon(t, -1./3., p[0]/p[2], 1e-3)
+	assert.InEpsilon(t, -1./2., p[1]/p[2], 1e-3)
 }
 
 /*
@@ -241,15 +241,15 @@ func TestBackprop8(t *testing.T) {
 	Panic(err)
 
 	assert.Equal(t, 1.0, x.Val)
-	assert.True(t, SimpleFloatEqual(a.Val, math.Exp(1), 1e-3))
-	assert.True(t, SimpleFloatEqual(f1.Val, math.Exp(1), 1e-3))
-	assert.True(t, SimpleFloatEqual(f2.Val, math.Exp(1), 1e-3))
+	assert.InDelta(t, math.Exp(1), a.Val, 1e-3)
+	assert.InDelta(t, math.Exp(1), f1.Val, 1e-3)
+	assert.InDelta(t, math.Exp(1), f2.Val, 1e-3)
 
 	graph.Backprop([]float64{1, 1})
 	assert.Equal(t, 1.0, f1.Grad)
 	assert.Equal(t, 1.0, f2.Grad)
 	assert.Equal(t, 2.0, a.Grad)
-	assert.True(t, SimpleFloatEqual(x.Grad, 2*math.Exp(1), 1e-3))
+	assert.InDelta(t, 2*math.Exp(1), x.Grad, 1e-3)
 }
 
 /*
@@ -285,10 +285,11 @@ func TestBackProp9(t *testing.T) {
 	p := optimizer.params
 	assert.True(t, IsNonIncreasing(losses1))
 	assert.True(t, IsNonIncreasing(losses2))
-	assert.True(t, SimpleFloatEqual(p[0]/p[2], -2./5., 0.05))
-	assert.True(t, SimpleFloatEqual(p[1]/p[2], -1./5., 0.05))
-	assert.True(t, SimpleFloatEqual(p[3]/p[5], -1./3., 0.05))
-	assert.True(t, SimpleFloatEqual(p[4]/p[5], 1., 0.05))
+
+	assert.InDelta(t, -2./5., p[0]/p[2], 5e-2)
+	assert.InDelta(t, -1./5., p[1]/p[2], 5e-2)
+	assert.InDelta(t, -1./3., p[3]/p[5], 5e-2)
+	assert.InDelta(t, 1., p[4]/p[5], 5e-2)
 }
 
 // f([x1, ..., xn], [y1, ..., yn]) = Dot(x, y)
@@ -353,5 +354,28 @@ func TestBackProp11(t *testing.T) {
 	assert.Equal(t, 1.0, f1.Grad)
 	assert.Equal(t, 1.0, f2.Grad)
 	assert.Equal(t, 2.0, a.Grad)
-	assert.True(t, SimpleFloatEqual(-0.08, x.Grad, 1e-3))
+	assert.InDelta(t, -0.08, x.Grad, 1e-3)
+}
+
+func TestBackprop12(t *testing.T) {
+	s := SoftMax(3, "s")
+	err := s.Forward([]float64{1, 2, 3})
+	Panic(err)
+
+	expSum := math.Exp(1) + math.Exp(2) + math.Exp(3)
+
+	assert.Equal(t, 1., s.Inputs[0].Val)
+	assert.Equal(t, 2., s.Inputs[1].Val)
+	assert.Equal(t, 3., s.Inputs[2].Val)
+	assert.InEpsilon(t, math.Exp(1), s.Intermediates[0].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(2), s.Intermediates[1].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(3), s.Intermediates[2].Val, 1e-6)
+	assert.InEpsilon(t, expSum, s.Intermediates[3].Val, 1e-6)
+	assert.InEpsilon(t, 1./expSum, s.Intermediates[4].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(1)/expSum, s.Intermediates[5].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(2)/expSum, s.Intermediates[6].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(3)/expSum, s.Intermediates[7].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(1)/expSum, s.Outputs[0].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(2)/expSum, s.Outputs[1].Val, 1e-6)
+	assert.InEpsilon(t, math.Exp(3)/expSum, s.Outputs[2].Val, 1e-6)
 }

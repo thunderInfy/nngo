@@ -2,7 +2,6 @@ package nngo
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 )
 
@@ -60,16 +59,6 @@ func ToPtrs[T any](arr []T) (ret [](*T)) {
 
 func RandomFloat64(randSource *rand.Rand, low float64, high float64) float64 {
 	return randSource.Float64()*(high-low) + low
-}
-
-// SimpleFloatEqual checks if two floating-point numbers are approximately equal
-// using relative tolerance.
-func SimpleFloatEqual(a, b, epsilon float64) bool {
-	// Find the larger of the absolute values of a and b
-	larger := math.Max(math.Abs(a), math.Abs(b))
-
-	// Check if the difference is within the relative tolerance
-	return math.Abs(a-b) <= epsilon*larger
 }
 
 func IsNonIncreasing[T float64 | int](arr []T) bool {

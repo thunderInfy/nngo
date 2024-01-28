@@ -162,6 +162,41 @@ func NewGraph(inputs, outputs, intermediates [](*Node)) Graph {
 	}
 }
 
+func SoftMax(n int, label string) Graph {
+	inputs := make([]Node, n)
+	exps := make([]Node, n)
+	prods := make([]Node, n)
+	var add Node
+	var reciprocal Node
+	outputs := make([]Node, n)
+
+	for i := range inputs {
+		inputs[i] = InputSymbol(fmt.Sprintf("%s-input-%d", label, i), [](*Node){&exps[i]})
+	}
+	for i := range exps {
+		exps[i] = ExpNode(fmt.Sprintf("%s-exp-%d", label, i), [](*Node){&add}, &inputs[i])
+	}
+	add = AddNode(fmt.Sprintf("%s-input", label), [](*Node){&reciprocal}, ToPtrs(exps))
+	reciprocal = ReciprocalNode(fmt.Sprintf("%s-reciprocal", label), ToPtrs(prods), &add)
+	for i := range prods {
+		prods[i] = MultiplyNode(
+			fmt.Sprintf("%s-multiply-%d", label, i),
+			[](*Node){&outputs[i]},
+			[](*Node){&reciprocal, &exps[i]},
+		)
+	}
+	for i := range outputs {
+		outputs[i] = OutputSymbol(fmt.Sprintf("%s-output-%d", label, i), &prods[i])
+	}
+
+	intermediates := ToPtrs(exps)
+	intermediates = append(intermediates, &add)
+	intermediates = append(intermediates, &reciprocal)
+	intermediates = append(intermediates, ToPtrs(prods)...)
+
+	return NewGraph(ToPtrs(inputs), ToPtrs(outputs), intermediates)
+}
+
 func (g *Graph) ZeroGrad() {
 	for i := range g.Inputs {
 		g.Inputs[i].Grad = 0
