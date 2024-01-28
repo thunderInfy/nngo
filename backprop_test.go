@@ -231,22 +231,25 @@ func TestBackProp7(t *testing.T) {
 func TestBackprop8(t *testing.T) {
 	var a Node
 	x := InputSymbol("x", [](*Node){&a})
-	f := OutputSymbol("f", &a)
-	a = ExpNode("a", &f, &x)
+	f1 := OutputSymbol("f1", &a)
+	f2 := OutputSymbol("f2", &a)
+	a = ExpNode("a", [](*Node){&f1, &f2}, &x)
 
-	graph := NewGraph([](*Node){&x}, [](*Node){&f}, [](*Node){&a})
+	graph := NewGraph([](*Node){&x}, [](*Node){&f1, &f2}, [](*Node){&a})
 
 	err := graph.Forward([]float64{1})
 	Panic(err)
 
 	assert.Equal(t, 1.0, x.Val)
 	assert.True(t, SimpleFloatEqual(a.Val, math.Exp(1), 1e-3))
-	assert.True(t, SimpleFloatEqual(f.Val, math.Exp(1), 1e-3))
+	assert.True(t, SimpleFloatEqual(f1.Val, math.Exp(1), 1e-3))
+	assert.True(t, SimpleFloatEqual(f2.Val, math.Exp(1), 1e-3))
 
-	graph.Backprop([]float64{1})
-	assert.Equal(t, 1.0, f.Grad)
-	assert.Equal(t, 1.0, a.Grad)
-	assert.True(t, SimpleFloatEqual(x.Grad, math.Exp(1), 1e-3))
+	graph.Backprop([]float64{1, 1})
+	assert.Equal(t, 1.0, f1.Grad)
+	assert.Equal(t, 1.0, f2.Grad)
+	assert.Equal(t, 2.0, a.Grad)
+	assert.True(t, SimpleFloatEqual(x.Grad, 2*math.Exp(1), 1e-3))
 }
 
 /*

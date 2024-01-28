@@ -130,8 +130,8 @@ func ReluNode(label string, output, input *Node) Node {
 	return newNode(label, Relu, [](*Node){input}, [](*Node){output})
 }
 
-func ExpNode(label string, output, input *Node) Node {
-	return newNode(label, Exp, [](*Node){input}, [](*Node){output})
+func ExpNode(label string, outputs [](*Node), input *Node) Node {
+	return newNode(label, Exp, [](*Node){input}, outputs)
 }
 
 func InputSymbol(label string, connectedTo [](*Node)) Node {
