@@ -211,78 +211,60 @@ func NewLinear(n1 int, n2 int, label string) Module {
 	inputs := make([](*Node), n1)
 	weights := make([](*Node), n1*n2)
 	biases := make([](*Node), n2)
-	prods := make([](Node), n1*n2)
-	adds := make([](Node), n2)
+	dots := make([](Node), n2)
+	dotPts := ToPtrs(dots)
 	outputs := make([](*Node), n2)
 
 	// initialize inputs
 	for i := 0; i < n1; i++ {
-		connectedTo := [](*Node){}
-		for j := 0; j < n2; j++ {
-			connectedTo = append(connectedTo, &prods[i+j*n1])
-		}
-		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), connectedTo)
+		node := InputSymbol(fmt.Sprintf("%s-input-%d", label, i), dotPts)
 		inputs[i] = &node
 	}
+	unitNode := InputSymbol("unit", dotPts)
+	unitNode.Val = 1
 
 	// initialize weights
 	for i := 0; i < n2; i++ {
 		for j := 0; j < n1; j++ {
 			num := j + i*n1
-			node := InputSymbol(fmt.Sprintf("%s-weight-%d", label, num), [](*Node){&prods[j+i*n1]})
+			node := InputSymbol(fmt.Sprintf("%s-weight-%d", label, num), [](*Node){&dots[i]})
 			weights[num] = &node
 		}
 	}
 
 	// initialize biases
 	for i := 0; i < n2; i++ {
-		node := InputSymbol(fmt.Sprintf("%s-bias-%d", label, i), [](*Node){&adds[i]})
+		node := InputSymbol(fmt.Sprintf("%s-bias-%d", label, i), [](*Node){&dots[i]})
 		biases[i] = &node
-	}
-
-	// initialize prods
-	for i := 0; i < n2; i++ {
-		for j := 0; j < n1; j++ {
-			num := j + i*n1
-			prods[num] = MultiplyNode(
-				fmt.Sprintf("%s-prod-%d", label, num),
-				[](*Node){&adds[i]},
-				[](*Node){inputs[j], weights[num]},
-			)
-		}
 	}
 
 	// initalize outputs
 	for i := 0; i < n2; i++ {
-		node := OutputSymbol(fmt.Sprintf("%s-output-%d", label, i), &adds[i])
+		node := OutputSymbol(fmt.Sprintf("%s-output-%d", label, i), &dots[i])
 		outputs[i] = &node
 	}
 
-	// initialize adds
+	// initialize dots
 	for i := 0; i < n2; i++ {
-		addInputs := ToPtrs(prods[(n1 * i):(n1 + n1*i)])
-		addInputs = append(addInputs, biases[i])
+		dotInputs := append(inputs, &unitNode)
+		dotInputs = append(dotInputs, weights[(n1*i):(n1+n1*i)]...)
+		dotInputs = append(dotInputs, biases[i])
 
-		adds[i] = AddNode(
-			fmt.Sprintf("%s-add-%d", label, i),
+		dots[i] = DotNode(
+			fmt.Sprintf("%s-dot-%d", label, i),
 			[](*Node){outputs[i]},
-			addInputs,
+			dotInputs,
 		)
 	}
 
 	inps := inputs
 	for i := 0; i < n2; i++ {
-		for j := 0; j < n1; j++ {
-			inps = append(inps, weights[j+i*n1])
-		}
+		inps = append(inps, weights[(n1*i):(n1+n1*i)]...)
 		inps = append(inps, biases[i])
 	}
 
-	intermediates := ToPtrs(prods)
-	intermediates = append(intermediates, ToPtrs(adds)...)
-
 	return Module{
-		Graph:  NewGraph(inps, outputs, intermediates),
+		Graph:  NewGraph(inps, outputs, dotPts),
 		Params: inps[n1:],
 	}
 }

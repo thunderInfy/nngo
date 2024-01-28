@@ -55,10 +55,7 @@ func TestBackProp2(t *testing.T) {
 	assert.Equal(t, 5.0, graph.Inputs[4].Val)
 	assert.Equal(t, 2.0, graph.Inputs[5].Val)
 	assert.Equal(t, 1.0, graph.Inputs[6].Val)
-	assert.Equal(t, -4.0, graph.Intermediates[0].Val)
-	assert.Equal(t, -30.0, graph.Intermediates[1].Val)
-	assert.Equal(t, 14.0, graph.Intermediates[2].Val)
-	assert.Equal(t, -19.0, graph.Intermediates[3].Val)
+	assert.Equal(t, -19.0, graph.Intermediates[0].Val)
 	assert.Equal(t, -19.0, graph.Outputs[0].Val)
 
 	graph.Backprop([]float64{1})
@@ -70,9 +67,6 @@ func TestBackProp2(t *testing.T) {
 	assert.Equal(t, 7.0, graph.Inputs[5].Grad)
 	assert.Equal(t, 1.0, graph.Inputs[6].Grad)
 	assert.Equal(t, 1.0, graph.Intermediates[0].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[1].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[2].Grad)
-	assert.Equal(t, 1.0, graph.Intermediates[3].Grad)
 	assert.Equal(t, 1.0, graph.Outputs[0].Grad)
 
 }
