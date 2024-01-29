@@ -95,7 +95,7 @@ func (n *Node) ComputeVal() {
 	case Reciprocal:
 		n.Val = 1 / n.Inputs[0].Val
 	case "":
-		if n.IsOutputSymbol() {
+		if len(n.Inputs) > 0 {
 			n.Val = n.Inputs[0].Val
 		}
 	}
@@ -154,6 +154,26 @@ type Graph struct {
 	Intermediates [](*Node)
 }
 
+func MergeTwo(x, y Graph) Graph {
+	for i := range x.Outputs {
+		x.Outputs[i].Outputs = append(x.Outputs[i].Outputs, y.Inputs[i])
+		y.Inputs[i].Inputs = append(y.Inputs[i].Inputs, x.Outputs[i])
+	}
+	x.Intermediates = append(x.Intermediates, x.Outputs...)
+	x.Intermediates = append(x.Intermediates, y.Inputs...)
+	x.Intermediates = append(x.Intermediates, y.Intermediates...)
+	x.Outputs = y.Outputs
+	return x
+}
+
+func Merge(graphs []Graph) Graph {
+	merged := graphs[0]
+	for i := 1; i < len(graphs); i++ {
+		merged = MergeTwo(merged, graphs[i])
+	}
+	return merged
+}
+
 func NewGraph(inputs, outputs, intermediates [](*Node)) Graph {
 	return Graph{
 		Inputs:        inputs,
@@ -176,7 +196,7 @@ func SoftMax(n int, label string) Graph {
 	for i := range exps {
 		exps[i] = ExpNode(fmt.Sprintf("%s-exp-%d", label, i), [](*Node){&add}, &inputs[i])
 	}
-	add = AddNode(fmt.Sprintf("%s-input", label), [](*Node){&reciprocal}, ToPtrs(exps))
+	add = AddNode(fmt.Sprintf("%s-add", label), [](*Node){&reciprocal}, ToPtrs(exps))
 	reciprocal = ReciprocalNode(fmt.Sprintf("%s-reciprocal", label), ToPtrs(prods), &add)
 	for i := range prods {
 		prods[i] = MultiplyNode(
