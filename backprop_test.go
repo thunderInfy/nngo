@@ -378,6 +378,25 @@ func TestBackprop12(t *testing.T) {
 	assert.InEpsilon(t, math.Exp(1)/expSum, s.Outputs[0].Val, 1e-6)
 	assert.InEpsilon(t, math.Exp(2)/expSum, s.Outputs[1].Val, 1e-6)
 	assert.InEpsilon(t, math.Exp(3)/expSum, s.Outputs[2].Val, 1e-6)
+
+	reciprocalGrad := math.Exp(1) + 1.5*math.Exp(2) + 2*math.Exp(3)
+	addGrad := reciprocalGrad * (-1) / (expSum * expSum)
+
+	s.Backprop([]float64{1, 1.5, 2})
+	assert.Equal(t, 1., s.Outputs[0].Grad)
+	assert.Equal(t, 1.5, s.Outputs[1].Grad)
+	assert.Equal(t, 2., s.Outputs[2].Grad)
+	assert.Equal(t, 1., s.Intermediates[5].Grad)
+	assert.Equal(t, 1.5, s.Intermediates[6].Grad)
+	assert.Equal(t, 2., s.Intermediates[7].Grad)
+	assert.InEpsilon(t, reciprocalGrad, s.Intermediates[4].Grad, 1e-6)
+	assert.InEpsilon(t, addGrad, s.Intermediates[3].Grad, 1e-6)
+	assert.InEpsilon(t, addGrad+1./expSum, s.Intermediates[0].Grad, 1e-6)
+	assert.InEpsilon(t, addGrad+1.5/expSum, s.Intermediates[1].Grad, 1e-6)
+	assert.InEpsilon(t, addGrad+2./expSum, s.Intermediates[2].Grad, 1e-6)
+	assert.InEpsilon(t, math.Exp(1)*(addGrad+1./expSum), s.Inputs[0].Grad, 1e-6)
+	assert.InEpsilon(t, math.Exp(2)*(addGrad+1.5/expSum), s.Inputs[1].Grad, 1e-6)
+	assert.InEpsilon(t, math.Exp(3)*(addGrad+2./expSum), s.Inputs[2].Grad, 1e-6)
 }
 
 func TestBackprop13(t *testing.T) {
