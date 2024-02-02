@@ -1,3 +1,3 @@
 # nngo
 
-Implementation of simple automatic differentiation in Go
+Implementation of automatic differentiation in Go
