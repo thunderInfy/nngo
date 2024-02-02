@@ -79,3 +79,7 @@ func DotProduct(a, b []float64) (res float64) {
 	}
 	return res
 }
+
+func Append[T any](l *([]T), v ...T) {
+	*l = append(*l, v...)
+}

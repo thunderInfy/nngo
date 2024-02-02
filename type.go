@@ -156,12 +156,12 @@ type Graph struct {
 
 func MergeTwo(x, y Graph) Graph {
 	for i := range x.Outputs {
-		x.Outputs[i].Outputs = append(x.Outputs[i].Outputs, y.Inputs[i])
-		y.Inputs[i].Inputs = append(y.Inputs[i].Inputs, x.Outputs[i])
+		Append(&x.Outputs[i].Outputs, y.Inputs[i])
+		Append(&y.Inputs[i].Inputs, x.Outputs[i])
 	}
-	x.Intermediates = append(x.Intermediates, x.Outputs...)
-	x.Intermediates = append(x.Intermediates, y.Inputs...)
-	x.Intermediates = append(x.Intermediates, y.Intermediates...)
+	Append(&x.Intermediates, x.Outputs...)
+	Append(&x.Intermediates, y.Inputs...)
+	Append(&x.Intermediates, y.Intermediates...)
 	x.Outputs = y.Outputs
 	return x
 }
@@ -210,10 +210,9 @@ func SoftMax(n int, label string) Graph {
 	}
 
 	intermediates := ToPtrs(exps)
-	intermediates = append(intermediates, &add)
-	intermediates = append(intermediates, &reciprocal)
-	intermediates = append(intermediates, ToPtrs(prods)...)
-
+	Append(&intermediates, &add)
+	Append(&intermediates, &reciprocal)
+	Append(&intermediates, ToPtrs(prods)...)
 	return NewGraph(ToPtrs(inputs), ToPtrs(outputs), intermediates)
 }
 
@@ -248,7 +247,7 @@ type Module struct {
 }
 
 func (m *Module) Forward(inputValues []float64, optimizer *Optimizer) (err error) {
-	inputValues = append(inputValues, optimizer.GetWeights()...)
+	Append(&inputValues, optimizer.GetWeights()...)
 	err = m.Graph.Forward(inputValues)
 	return
 }
@@ -302,8 +301,8 @@ func NewLinear(n1 int, n2 int, label string) Module {
 	// initialize dots
 	for i := 0; i < n2; i++ {
 		dotInputs := append(inputs, &unitNode)
-		dotInputs = append(dotInputs, weights[(n1*i):(n1+n1*i)]...)
-		dotInputs = append(dotInputs, biases[i])
+		Append(&dotInputs, weights[(n1*i):(n1+n1*i)]...)
+		Append(&dotInputs, biases[i])
 
 		dots[i] = DotNode(
 			fmt.Sprintf("%s-dot-%d", label, i),
@@ -314,8 +313,8 @@ func NewLinear(n1 int, n2 int, label string) Module {
 
 	inps := inputs
 	for i := 0; i < n2; i++ {
-		inps = append(inps, weights[(n1*i):(n1+n1*i)]...)
-		inps = append(inps, biases[i])
+		Append(&inps, weights[(n1*i):(n1+n1*i)]...)
+		Append(&inps, biases[i])
 	}
 
 	return Module{
@@ -343,7 +342,7 @@ func (o *Optimizer) GetWeights() []float64 {
 	if len(o.params) == 0 {
 		// initialize
 		for i := 0; i < o.NumParams; i++ {
-			o.params = append(o.params, RandomFloat64(o.RandomSource, -1, 1))
+			Append(&o.params, RandomFloat64(o.RandomSource, -1, 1))
 		}
 	}
 	return o.params
@@ -363,7 +362,7 @@ type Stack[T any] struct {
 
 // Push adds an element to the top of the stack.
 func (s *Stack[T]) Push(item T) {
-	s.data = append(s.data, item)
+	Append(&s.data, item)
 }
 
 // Pop removes and returns the top element from the stack.

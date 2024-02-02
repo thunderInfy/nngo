@@ -89,7 +89,7 @@ func TestBackProp3(t *testing.T) {
 		linear.Graph.ZeroGrad()
 		linear.Backprop([]float64{2 * linear.Graph.Outputs[0].Val}, &optimizer)
 
-		losses = append(losses, loss1+loss2)
+		Append(&losses, loss1+loss2)
 	}
 	p := optimizer.params
 	assert.True(t, IsNonIncreasing(losses))
@@ -266,21 +266,21 @@ func TestBackProp9(t *testing.T) {
 		for _, point := range [][]float64{{0, 5}, {2.5, 0}} {
 			err := linear.Forward(point, &optimizer)
 			Panic(err)
-			localLoss = append(localLoss, math.Pow(linear.Graph.Outputs[0].Val, 2))
+			Append(&localLoss, math.Pow(linear.Graph.Outputs[0].Val, 2))
 			linear.Graph.ZeroGrad()
 			linear.Backprop([]float64{2 * linear.Graph.Outputs[0].Val, 0.}, &optimizer)
 		}
-		losses1 = append(losses1, Sum(localLoss))
+		Append(&losses1, Sum(localLoss))
 
 		localLoss = []float64{}
 		for _, point := range [][]float64{{0, -1.}, {3, 0}} {
 			err := linear.Forward(point, &optimizer)
 			Panic(err)
-			localLoss = append(localLoss, math.Pow(linear.Graph.Outputs[1].Val, 2))
+			Append(&localLoss, math.Pow(linear.Graph.Outputs[1].Val, 2))
 			linear.Graph.ZeroGrad()
 			linear.Backprop([]float64{0., 2 * linear.Graph.Outputs[1].Val}, &optimizer)
 		}
-		losses2 = append(losses2, Sum(localLoss))
+		Append(&losses2, Sum(localLoss))
 	}
 	p := optimizer.params
 	assert.True(t, IsNonIncreasing(losses1))
